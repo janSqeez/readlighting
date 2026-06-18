@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { ThemeProvider, BusyIndicator, Button, Text, FlexBox, Icon, Dialog } from '@ui5/webcomponents-react';
 import '@ui5/webcomponents-icons/dist/AllIcons.js';
 import type { Document, HighlightColor } from './types';
@@ -15,9 +16,13 @@ import { NotesEditor } from './components/NotesEditor';
 import { exportAsJSON, exportAsMarkdown } from './services/exporter';
 import { exportDatabaseBackup, importDatabaseBackup } from './services/backup';
 import { exportDocumentBundle, importDocumentBundle } from './services/documentBundle';
-import { readFileText, inferDocumentType } from './services/filesystem';
+import { readFileText, inferDocumentType, isFileSystemAccessSupported } from './services/filesystem';
 import { hashContent } from './services/hash';
 import './App.css';
+
+// showDirectoryPicker is present-but-nonfunctional in Capacitor's Android WebView
+// (the JS property exists, calling it does nothing) — feature detection alone is unreliable there.
+const VAULT_SUPPORTED = isFileSystemAccessSupported() && Capacitor.getPlatform() !== 'android';
 
 export default function App() {
   const { documents, loading, addDocument, updateDocument, removeDocument, findByHash } = useDocuments();
@@ -219,17 +224,19 @@ export default function App() {
                 onSelect={handleSelectDoc}
                 onImportBundle={handleImportBundle}
               />
-              <VaultBrowser
-                folders={folders}
-                openFolderIds={openFolderIds}
-                selectedFsKey={selectedDoc?.fs ? `${selectedDoc.fs.folderId}:${selectedDoc.fs.relativePath}` : null}
-                searchQuery={search}
-                onOpenNew={openNewFolder}
-                onReopen={reopenFolder}
-                onClose={closeFolder}
-                onForget={forgetFolder}
-                onFileSelect={handleFsFileSelect}
-              />
+              {VAULT_SUPPORTED && (
+                <VaultBrowser
+                  folders={folders}
+                  openFolderIds={openFolderIds}
+                  selectedFsKey={selectedDoc?.fs ? `${selectedDoc.fs.folderId}:${selectedDoc.fs.relativePath}` : null}
+                  searchQuery={search}
+                  onOpenNew={openNewFolder}
+                  onReopen={reopenFolder}
+                  onClose={closeFolder}
+                  onForget={forgetFolder}
+                  onFileSelect={handleFsFileSelect}
+                />
+              )}
               <DocumentList
                 documents={documents}
                 searchQuery={search}
