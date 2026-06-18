@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 260px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff;
+      color: #1d2d3e;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .header img { width: 24px; height: 24px; }
+    .header h1 { font-size: 15px; font-weight: 700; }
+    #clip-btn {
+      width: 100%;
+      padding: 10px;
+      background: #0070f2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    #clip-btn:hover { background: #0057c2; }
+    #clip-btn:disabled { background: #89919a; cursor: default; }
+    #status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #556b82;
+      min-height: 18px;
+    }
+    #status.error { color: #bb0000; }
+    #status.success { color: #107e3e; }
+    .settings {
+      margin-top: 14px;
+      border-top: 1px solid #e4e5e7;
+      padding-top: 12px;
+    }
+    .settings label {
+      display: block;
+      font-size: 11px;
+      color: #556b82;
+      margin-bottom: 4px;
+    }
+    .settings input {
+      width: 100%;
+      padding: 5px 8px;
+      border: 1px solid #89919a;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #1d2d3e;
+    }
+    .settings button {
+      margin-top: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid #0070f2;
+      background: transparent;
+      color: #0070f2;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icon.svg" alt="">
+    <h1>Readlighting Clipper</h1>
+  </div>
+
+  <button id="clip-btn">✂️ Seite clippen</button>
+  <div id="status"></div>
+
+  <div class="settings">
+    <label>App-URL (wo läuft Readlighting?)</label>
+    <input id="app-url" type="text" placeholder="http://localhost:5173">
+    <button id="save-url">Speichern</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

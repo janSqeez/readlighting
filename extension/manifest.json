@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "Readlighting Clipper",
+  "version": "1.0.0",
+  "description": "Clip any web page to Readlighting – auch hinter Login und Paywall",
+  "permissions": ["activeTab", "tabs", "storage"],
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "Clip to Readlighting"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "48": "icon.svg",
+    "96": "icon.svg"
+  }
+}

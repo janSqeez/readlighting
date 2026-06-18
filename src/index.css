@@ -1,0 +1,22 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--sapFontFamily, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  background: var(--sapBackgroundColor, #f5f6f7);
+  color: var(--sapTextColor, #1d2d3e);
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  text-align: left;
+  border: none;
+  display: block;
+}
