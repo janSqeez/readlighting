@@ -17,6 +17,40 @@
   flex: 1;
   overflow: hidden;
   height: 100%;
+  position: relative;
+}
+
+/* Below this width, sidebar-left + sidebar-right alone can exceed the
+   viewport, squeezing .content-area to near zero and forcing the
+   viewer-toolbar to wrap into many rows. Overlay them instead so the
+   content area always keeps full width. */
+@media (max-width: 700px) {
+  .sidebar-left {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 20;
+    width: min(300px, 85vw);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+  }
+
+  /* sidebar-right overlays only the area below the viewer-toolbar
+     (its positioning parent), so it doesn't cover/block the toolbar's
+     buttons above it. */
+  .viewer-and-comments {
+    position: relative;
+  }
+
+  .sidebar-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    z-index: 20;
+    width: min(300px, 85vw);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+  }
 }
 
 /* Sidebar Left */
