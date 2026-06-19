@@ -10,7 +10,7 @@ import { AppShell } from './components/AppShell';
 import { SidebarToolbar } from './components/SidebarToolbar';
 import { DocumentList } from './components/DocumentList';
 import { VaultBrowser } from './components/VaultBrowser';
-import { DocumentViewer } from './components/DocumentViewer';
+import { DocumentViewer, type DocumentViewerHandle } from './components/DocumentViewer';
 import { CommentPanel } from './components/CommentPanel';
 import { NotesEditor } from './components/NotesEditor';
 import { exportAsJSON, exportAsMarkdown } from './services/exporter';
@@ -24,6 +24,16 @@ import './App.css';
 // (the JS property exists, calling it does nothing) — feature detection alone is unreliable there.
 const VAULT_SUPPORTED = isFileSystemAccessSupported() && Capacitor.getPlatform() !== 'android';
 
+const HIGHLIGHT_COLORS: HighlightColor[] = ['yellow', 'green', 'blue', 'pink', 'orange'];
+
+const HIGHLIGHT_COLOR_STYLES: Record<HighlightColor, string> = {
+  yellow: '#FFEB3B',
+  green: '#4CAF50',
+  blue: '#2196F3',
+  pink: '#E91E63',
+  orange: '#FF9800',
+};
+
 export default function App() {
   const { documents, loading, addDocument, updateDocument, removeDocument, findByHash } = useDocuments();
   const { folders, openFolderIds, openNewFolder, reopenFolder, closeFolder, forgetFolder } = useFolders();
@@ -36,6 +46,7 @@ export default function App() {
   const [commentPanelOpen, setCommentPanelOpen] = useState(true);
   const [notesOpen, setNotesOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const documentViewerRef = useRef<DocumentViewerHandle>(null);
 
   const { highlights, addHighlight, updateHighlight, removeHighlight } = useHighlights(
     selectedDoc?.id ?? null
@@ -256,7 +267,18 @@ export default function App() {
                     <Text style={{ fontWeight: '600', fontSize: '14px' }}>
                       {selectedDoc.title}
                     </Text>
-                    <FlexBox gap="8px">
+                    <FlexBox alignItems="Center" gap="8px">
+                      <FlexBox alignItems="Center" gap="6px" title="Text markieren, dann Farbe wählen">
+                        {HIGHLIGHT_COLORS.map((color) => (
+                          <button
+                            key={color}
+                            className="color-swatch"
+                            style={{ background: HIGHLIGHT_COLOR_STYLES[color] }}
+                            title={color}
+                            onClick={() => documentViewerRef.current?.applyHighlightToSelection(color)}
+                          />
+                        ))}
+                      </FlexBox>
                       <Button
                         design={notesOpen ? 'Emphasized' : 'Default'}
                         onClick={() => setNotesOpen((o) => !o)}
@@ -284,6 +306,7 @@ export default function App() {
                 <div className="viewer-and-comments">
                   <div className="viewer-wrapper">
                     <DocumentViewer
+                      ref={documentViewerRef}
                       document={selectedDoc}
                       highlights={highlights}
                       activeHighlightId={activeHighlightId}

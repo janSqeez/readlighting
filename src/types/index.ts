@@ -38,15 +38,6 @@ export interface VaultFolder {
   lastOpenedAt: Date;
 }
 
-export interface ColorPickerState {
-  visible: boolean;
-  x: number;
-  y: number;
-  rangeStart: number;
-  rangeEnd: number;
-  selectedText: string;
-}
-
 export interface SearchMatch {
   index: number;
   start: number;

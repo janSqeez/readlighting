@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
+import { forwardRef, useRef, useEffect, useImperativeHandle, useMemo, useState, useCallback } from 'react';
 import { marked } from 'marked';
 import type { InputDomRef } from '@ui5/webcomponents-react';
 import type { Ui5CustomEvent } from '@ui5/webcomponents-react-base';
@@ -16,7 +16,7 @@ import '@ui5/webcomponents-icons/dist/decline.js';
 import type { Document, Highlight, HighlightColor } from '../types';
 import type { SearchMatch } from '../types';
 import { applyHighlightsToContent } from '../services/highlighter';
-import { HighlightLayer } from './HighlightLayer';
+import { getTextOffsets } from '../services/highlighter';
 
 interface DocumentViewerProps {
   document: Document;
@@ -26,18 +26,41 @@ interface DocumentViewerProps {
   onHighlightClick: (id: string) => void;
 }
 
-export function DocumentViewer({
+export interface DocumentViewerHandle {
+  applyHighlightToSelection: (color: HighlightColor) => void;
+}
+
+export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerProps>(function DocumentViewer({
   document,
   highlights,
   activeHighlightId,
   onHighlight,
   onHighlightClick,
-}: DocumentViewerProps) {
+}, ref) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMatches, setSearchMatches] = useState<SearchMatch[]>([]);
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
   const [searchVisible, setSearchVisible] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    applyHighlightToSelection(color: HighlightColor) {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || !selection.rangeCount) return;
+
+      const range = selection.getRangeAt(0);
+      const selectedText = selection.toString().trim();
+      if (!selectedText) return;
+
+      if (!contentRef.current?.contains(range.commonAncestorContainer)) return;
+
+      const offsets = getTextOffsets(contentRef.current, range);
+      if (!offsets || offsets.start === offsets.end) return;
+
+      onHighlight(offsets.start, offsets.end, selectedText, color);
+      selection.removeAllRanges();
+    },
+  }), [onHighlight]);
 
   useEffect(() => {
     setSearchQuery('');
@@ -108,6 +131,24 @@ export function DocumentViewer({
     return () => window.document.removeEventListener('keydown', handleKeyDown);
   }, [searchVisible]);
 
+  useEffect(() => {
+    function handleHighlightClick(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      const mark = target.closest('mark[data-highlight-id]');
+      if (mark) {
+        const id = mark.getAttribute('data-highlight-id');
+        if (id) {
+          e.stopPropagation();
+          onHighlightClick(id);
+        }
+      }
+    }
+
+    const container = contentRef.current;
+    container?.addEventListener('click', handleHighlightClick);
+    return () => container?.removeEventListener('click', handleHighlightClick);
+  }, [onHighlightClick]);
+
   const navigateSearch = useCallback((dir: 'prev' | 'next') => {
     setActiveMatchIndex((prev) => {
       if (searchMatches.length === 0) return 0;
@@ -155,12 +196,7 @@ export function DocumentViewer({
           className={`document-content${document.type === 'markdown' ? ' markdown-content' : ''}`}
           dangerouslySetInnerHTML={{ __html: renderedContent ?? '' }}
         />
-        <HighlightLayer
-          containerRef={contentRef}
-          onHighlight={onHighlight}
-          onHighlightClick={onHighlightClick}
-        />
       </div>
     </div>
   );
-}
+});

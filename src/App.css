@@ -348,30 +348,10 @@ mark.search-match-active {
   outline: 2px solid rgba(255, 100, 0, 0.9);
 }
 
-/* Color Picker Popup */
-.color-picker-popup {
-  position: fixed;
-  z-index: 9999;
-  background: var(--sapBaseColor, #fff);
-  border: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
-  border-radius: 8px;
-  padding: 10px 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  min-width: 200px;
-}
-
-.color-picker-label {
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--sapTextColor, #1d2d3e);
-  margin-bottom: 4px;
-}
-
+/* Highlight color swatches (toolbar) */
 .color-swatch {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 2px solid rgba(0, 0, 0, 0.15);
   cursor: pointer;
