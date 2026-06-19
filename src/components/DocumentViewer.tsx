@@ -24,10 +24,12 @@ interface DocumentViewerProps {
   activeHighlightId: string | null;
   onHighlight: (start: number, end: number, text: string, color: HighlightColor) => void;
   onHighlightClick: (id: string) => void;
+  onSearchOpen?: () => void;
 }
 
 export interface DocumentViewerHandle {
   applyHighlightToSelection: (color: HighlightColor) => void;
+  openSearch: () => void;
 }
 
 export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerProps>(function DocumentViewer({
@@ -36,12 +38,18 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
   activeHighlightId,
   onHighlight,
   onHighlightClick,
+  onSearchOpen,
 }, ref) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMatches, setSearchMatches] = useState<SearchMatch[]>([]);
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
   const [searchVisible, setSearchVisible] = useState(false);
+
+  const openSearch = useCallback(() => {
+    setSearchVisible(true);
+    onSearchOpen?.();
+  }, [onSearchOpen]);
 
   useImperativeHandle(ref, () => ({
     applyHighlightToSelection(color: HighlightColor) {
@@ -60,7 +68,8 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
       onHighlight(offsets.start, offsets.end, selectedText, color);
       selection.removeAllRanges();
     },
-  }), [onHighlight]);
+    openSearch,
+  }), [onHighlight, openSearch]);
 
   useEffect(() => {
     setSearchQuery('');
@@ -120,7 +129,7 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
-        setSearchVisible(true);
+        openSearch();
       }
       if (e.key === 'Escape' && searchVisible) {
         setSearchVisible(false);
@@ -129,7 +138,7 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
     }
     window.document.addEventListener('keydown', handleKeyDown);
     return () => window.document.removeEventListener('keydown', handleKeyDown);
-  }, [searchVisible]);
+  }, [searchVisible, openSearch]);
 
   useEffect(() => {
     function handleHighlightClick(e: MouseEvent) {

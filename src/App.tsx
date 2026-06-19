@@ -171,6 +171,15 @@ export default function App() {
     setCommentPanelOpen(true);
   }, []);
 
+  // Below the narrow-viewport breakpoint (matches App.css), the comments
+  // panel overlays the document instead of squeezing it — closing it when
+  // search opens keeps the search bar from being hidden underneath.
+  const handleSearchOpen = useCallback(() => {
+    if (window.matchMedia('(max-width: 700px)').matches) {
+      setCommentPanelOpen(false);
+    }
+  }, []);
+
   const handleCommentSave = useCallback(
     (id: string, comment: string) => {
       updateHighlight(id, { comment });
@@ -263,43 +272,43 @@ export default function App() {
             {selectedDoc ? (
               <>
                 <div className="viewer-toolbar">
-                  <FlexBox alignItems="Center" justifyContent="SpaceBetween" style={{ padding: '0 8px' }}>
-                    <Text style={{ fontWeight: '600', fontSize: '14px' }}>
-                      {selectedDoc.title}
-                    </Text>
-                    <FlexBox alignItems="Center" gap="8px">
-                      <FlexBox alignItems="Center" gap="6px" title="Text markieren, dann Farbe wählen">
-                        {HIGHLIGHT_COLORS.map((color) => (
-                          <button
-                            key={color}
-                            className="color-swatch"
-                            style={{ background: HIGHLIGHT_COLOR_STYLES[color] }}
-                            title={color}
-                            onClick={() => documentViewerRef.current?.applyHighlightToSelection(color)}
-                          />
-                        ))}
-                      </FlexBox>
-                      <Button
-                        design={notesOpen ? 'Emphasized' : 'Default'}
-                        onClick={() => setNotesOpen((o) => !o)}
-                      >
-                        Notizen
-                      </Button>
-                      <Button
-                        design={commentPanelOpen ? 'Emphasized' : 'Default'}
-                        onClick={() => setCommentPanelOpen((o) => !o)}
-                        icon="comment"
-                      >
-                        Kommentare ({highlights.length})
-                      </Button>
-                      <Button
-                        icon="download"
-                        design="Default"
-                        onClick={() => setExportDialogOpen(true)}
-                      >
-                        Export
-                      </Button>
+                  <FlexBox alignItems="Center" justifyContent="End" gap="8px" style={{ padding: '0 8px' }}>
+                    <FlexBox alignItems="Center" gap="6px" title="Text markieren, dann Farbe wählen">
+                      {HIGHLIGHT_COLORS.map((color) => (
+                        <button
+                          key={color}
+                          className="color-swatch"
+                          style={{ background: HIGHLIGHT_COLOR_STYLES[color] }}
+                          title={color}
+                          onClick={() => documentViewerRef.current?.applyHighlightToSelection(color)}
+                        />
+                      ))}
                     </FlexBox>
+                    <Button
+                      icon="search"
+                      design="Default"
+                      onClick={() => documentViewerRef.current?.openSearch()}
+                    />
+                    <Button
+                      design={notesOpen ? 'Emphasized' : 'Default'}
+                      onClick={() => setNotesOpen((o) => !o)}
+                    >
+                      Notizen
+                    </Button>
+                    <Button
+                      design={commentPanelOpen ? 'Emphasized' : 'Default'}
+                      onClick={() => setCommentPanelOpen((o) => !o)}
+                      icon="comment"
+                    >
+                      Kommentare ({highlights.length})
+                    </Button>
+                    <Button
+                      icon="download"
+                      design="Default"
+                      onClick={() => setExportDialogOpen(true)}
+                    >
+                      Export
+                    </Button>
                   </FlexBox>
                 </div>
 
@@ -312,6 +321,7 @@ export default function App() {
                       activeHighlightId={activeHighlightId}
                       onHighlight={handleHighlight}
                       onHighlightClick={handleHighlightClick}
+                      onSearchOpen={handleSearchOpen}
                     />
                   </div>
 
