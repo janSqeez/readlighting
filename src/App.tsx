@@ -16,6 +16,7 @@ import type { Document, FontSize, HighlightColor } from './types';
 import { useDocuments } from './hooks/useDocuments';
 import { useHighlights } from './hooks/useHighlights';
 import { useFolders } from './hooks/useFolders';
+import { useShareIntent } from './hooks/useShareIntent';
 import { AppShell } from './components/AppShell';
 import { SidebarToolbar } from './components/SidebarToolbar';
 import { DocumentList } from './components/DocumentList';
@@ -120,6 +121,8 @@ export default function App() {
     },
     [addDocument, updateDocument, findByHash]
   );
+
+  useShareIntent(handleAddDoc, handleSelectDoc);
 
   const handleDeleteDoc = useCallback(
     (id: string) => {

@@ -14,6 +14,8 @@
     "@capacitor-community/electron": "^5.0.1",
     "@capacitor/android": "^8.4.0",
     "@capacitor/core": "^8.4.0",
+    "@capacitor/filesystem": "^8.1.2",
+    "@mindlib-capacitor/send-intent": "^8.0.6",
     "@ui5/webcomponents": "^2.23.1",
     "@ui5/webcomponents-fiori": "^2.23.1",
     "@ui5/webcomponents-react": "^2.23.1",
