@@ -30,8 +30,8 @@ export function NotesEditor({ notes, onSave }: NotesEditorProps) {
 
   return (
     <Panel
-      headerText="Notes"
-      collapsed={false}
+      headerText="Notizen"
+      collapsed
       className="notes-panel"
     >
       <div className="notes-editor">

@@ -58,7 +58,6 @@ export default function App() {
   );
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const [commentPanelOpen, setCommentPanelOpen] = useState(true);
-  const [notesOpen, setNotesOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const documentViewerRef = useRef<DocumentViewerHandle>(null);
 
@@ -344,12 +343,6 @@ export default function App() {
                       onClick={() => documentViewerRef.current?.openSearch()}
                     />
                     <Button
-                      design={notesOpen ? 'Emphasized' : 'Default'}
-                      onClick={() => setNotesOpen((o) => !o)}
-                    >
-                      Notizen
-                    </Button>
-                    <Button
                       design={commentPanelOpen ? 'Emphasized' : 'Default'}
                       onClick={() => setCommentPanelOpen((o) => !o)}
                       icon="comment"
@@ -403,11 +396,9 @@ export default function App() {
                   )}
                 </div>
 
-                {notesOpen && (
-                  <div className="notes-section">
-                    <NotesEditor notes={selectedDoc.notes} onSave={handleNotesSave} />
-                  </div>
-                )}
+                <div className="notes-section">
+                  <NotesEditor notes={selectedDoc.notes} onSave={handleNotesSave} />
+                </div>
               </>
             ) : (
               <div className="welcome-screen">

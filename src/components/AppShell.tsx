@@ -68,6 +68,13 @@ export function AppShell({
 
   useEffect(() => {
     function handleShellBarAction(e: MouseEvent) {
+      // Non-overflow items relay their click via an extra synthetic "click"
+      // CustomEvent dispatched on the same host (see comment above), which
+      // would otherwise reach this same listener a second time and
+      // double-fire the action (e.g. toggling dark mode back off again
+      // immediately). Synthetic/scripted dispatches are always untrusted,
+      // so only react to the one genuine user-initiated click.
+      if (!e.isTrusted) return;
       const target = e.composedPath().find(
         (el): el is Element => el instanceof Element && el.hasAttribute('data-shellbar-action')
       );
