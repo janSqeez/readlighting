@@ -31,7 +31,7 @@
     left: 0;
     height: 100%;
     z-index: 20;
-    width: min(300px, 85vw);
+    width: min(340px, 85vw);
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
   }
 
@@ -55,9 +55,9 @@
 
 /* Sidebar Left */
 .sidebar-left {
-  width: 300px;
-  min-width: 260px;
-  max-width: 300px;
+  width: 340px;
+  min-width: 300px;
+  max-width: 380px;
   border-right: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
   display: flex;
   flex-direction: column;
@@ -78,6 +78,21 @@
   border-bottom: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
   background: var(--sapBaseColor, #fff);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.document-list-filters {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.filter-toggle-btn {
+  min-width: unset !important;
+  padding: 0 6px !important;
 }
 
 .sidebar-toolbar {
@@ -104,10 +119,33 @@
 
 .doc-list-item-content {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   width: 100%;
   min-height: 3.5rem;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.doc-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.doc-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding-left: 30px;
+  font-size: 11px;
+  color: var(--sapNeutralTextColor, #556b82);
+}
+
+.doc-date-completed {
+  color: var(--sapPositiveColor, #2b7d2b);
 }
 
 .doc-title {
@@ -117,13 +155,46 @@
   white-space: normal;
   word-break: break-word;
   line-height: 1.4;
-  padding: 8px 0;
+}
+
+.doc-title-read {
+  opacity: 0.55;
+}
+
+.favorite-btn,
+.read-btn {
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+
+.favorite-btn:hover,
+.read-btn:hover {
+  opacity: 1;
+}
+
+.favorite-btn.is-favorite {
+  opacity: 1;
+  color: #FFB200;
+}
+
+.read-btn.is-read {
+  opacity: 1;
+  color: var(--sapPositiveColor, #2b7d2b);
 }
 
 ui5-li-custom,
 ui5-li {
   --_ui5_list_item_base_height: auto;
   min-height: 4.5rem;
+}
+
+/* UI5's default ListItemStandard title truncates to one line with ellipsis
+   (wrapping-type="None"), regardless of host height - longer document
+   titles got cut off even though the row itself had grown taller. */
+.document-list ui5-li::part(title) {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 .doc-item-actions {

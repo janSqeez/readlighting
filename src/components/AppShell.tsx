@@ -45,6 +45,41 @@ export function AppShell({
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  // ShellBarItems that get grouped into the "..." overflow menu (when the
+  // ShellBar runs out of horizontal space) stop firing their `onClick` prop:
+  // UI5's overflow popover renders them as a ListItemStandard whose own
+  // "click" event is dispatched with composed:false and has the native click
+  // stopped via stopPropagation() first, so it never reaches the
+  // ShellBarItem host the React onClick listener is attached to. Only the
+  // non-overflow Button rendering explicitly relays the click to the host.
+  // Workaround: tag each item with data-action and resolve clicks via a
+  // single document-level capture-phase listener, which sees every click
+  // (including ones later stopped deeper in the tree) before it can be
+  // stopped, regardless of overflow state.
+  const actionHandlersRef = useRef<Record<string, () => void>>({});
+  useEffect(() => {
+    actionHandlersRef.current = {
+      'toggle-sidebar': onToggleSidebar,
+      'backup-export': () => onBackupExport?.(),
+      'backup-import': () => importInputRef.current?.click(),
+      'toggle-dark-mode': () => setIsDark((d) => !d),
+    };
+  }, [onToggleSidebar, onBackupExport, onBackupImport]);
+
+  useEffect(() => {
+    function handleShellBarAction(e: MouseEvent) {
+      const target = e.composedPath().find(
+        (el): el is Element => el instanceof Element && el.hasAttribute('data-shellbar-action')
+      );
+      const action = target?.getAttribute('data-shellbar-action');
+      if (action) {
+        actionHandlersRef.current[action]?.();
+      }
+    }
+    document.addEventListener('click', handleShellBarAction, true);
+    return () => document.removeEventListener('click', handleShellBarAction, true);
+  }, []);
+
   return (
     <div className="app-shell">
       <ShellBar
@@ -55,22 +90,26 @@ export function AppShell({
         <ShellBarItem
           icon="menu2"
           text={sidebarOpen ? 'Dateiliste ausblenden' : 'Dateiliste einblenden'}
-          onClick={onToggleSidebar}
+          data-shellbar-action="toggle-sidebar"
         />
         {onBackupExport && (
-          <ShellBarItem icon="download" text="Datenbank-Backup exportieren" onClick={onBackupExport} />
+          <ShellBarItem
+            icon="download"
+            text="Datenbank-Backup exportieren"
+            data-shellbar-action="backup-export"
+          />
         )}
         {onBackupImport && (
           <ShellBarItem
             icon="upload"
             text="Datenbank-Backup importieren"
-            onClick={() => importInputRef.current?.click()}
+            data-shellbar-action="backup-import"
           />
         )}
         <ShellBarItem
           icon={isDark ? 'light-mode' : 'dark-mode'}
           text={isDark ? 'Light Mode' : 'Dark Mode'}
-          onClick={() => setIsDark((d) => !d)}
+          data-shellbar-action="toggle-dark-mode"
         />
       </ShellBar>
       {onBackupImport && (

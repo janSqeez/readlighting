@@ -13,15 +13,25 @@ import '@ui5/webcomponents-icons/dist/search.js';
 import '@ui5/webcomponents-icons/dist/navigation-up-arrow.js';
 import '@ui5/webcomponents-icons/dist/navigation-down-arrow.js';
 import '@ui5/webcomponents-icons/dist/decline.js';
-import type { Document, Highlight, HighlightColor } from '../types';
+import type { Document, FontSize, Highlight, HighlightColor } from '../types';
 import type { SearchMatch } from '../types';
 import { applyHighlightsToContent } from '../services/highlighter';
 import { getTextOffsets } from '../services/highlighter';
+
+// M matches the font-size that .document-content always had before the
+// font-size feature was added, so existing readers see no visual change.
+const FONT_SIZE_PX: Record<FontSize, string> = {
+  S: '14px',
+  M: '16px',
+  L: '19px',
+  XL: '22px',
+};
 
 interface DocumentViewerProps {
   document: Document;
   highlights: Highlight[];
   activeHighlightId: string | null;
+  fontSize: FontSize;
   onHighlight: (start: number, end: number, text: string, color: HighlightColor) => void;
   onHighlightClick: (id: string) => void;
   onSearchOpen?: () => void;
@@ -36,6 +46,7 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
   document,
   highlights,
   activeHighlightId,
+  fontSize,
   onHighlight,
   onHighlightClick,
   onSearchOpen,
@@ -203,6 +214,7 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
         <div
           ref={contentRef}
           className={`document-content${document.type === 'markdown' ? ' markdown-content' : ''}`}
+          style={{ fontSize: FONT_SIZE_PX[fontSize] }}
           dangerouslySetInnerHTML={{ __html: renderedContent ?? '' }}
         />
       </div>

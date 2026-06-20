@@ -1,5 +1,7 @@
 export type HighlightColor = 'yellow' | 'green' | 'blue' | 'pink' | 'orange';
 
+export type FontSize = 'S' | 'M' | 'L' | 'XL';
+
 export interface Highlight {
   id: string;
   documentId: string;
@@ -27,6 +29,9 @@ export interface Document {
   notes: string;
   source: 'local' | 'filesystem';
   fs?: DocumentFsLink;
+  read?: boolean;
+  completedAt?: Date;
+  favorite?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

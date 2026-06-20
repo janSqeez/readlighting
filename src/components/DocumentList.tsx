@@ -4,6 +4,7 @@ import type { Ui5CustomEvent } from '@ui5/webcomponents-react-base';
 import {
   Input,
   Button,
+  ToggleButton,
   List,
   ListItemStandard,
   Dialog,
@@ -16,7 +17,13 @@ import '@ui5/webcomponents-icons/dist/delete.js';
 import '@ui5/webcomponents-icons/dist/edit.js';
 import '@ui5/webcomponents-icons/dist/document-text.js';
 import '@ui5/webcomponents-icons/dist/world.js';
+import '@ui5/webcomponents-icons/dist/favorite.js';
+import '@ui5/webcomponents-icons/dist/unfavorite.js';
+import '@ui5/webcomponents-icons/dist/complete.js';
+import '@ui5/webcomponents-icons/dist/circle-task.js';
 import type { Document } from '../types';
+
+type DocFilter = 'favorite' | 'unread' | 'completed';
 
 interface DocumentListProps {
   documents: Document[];
@@ -25,15 +32,58 @@ interface DocumentListProps {
   onSelect: (doc: Document) => void;
   onRename: (id: string, newTitle: string) => void;
   onDelete: (id: string) => void;
+  onToggleRead: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
 }
 
-export function DocumentList({ documents, searchQuery, selectedId, onSelect, onRename, onDelete }: DocumentListProps) {
+// Sort tier: favorites always float to the top (regardless of read state),
+// completed documents always sink to the bottom, unread/non-favorite stay in the middle.
+function sortTier(doc: Document): number {
+  if (doc.favorite) return 0;
+  if (!doc.read) return 1;
+  return 2;
+}
+
+function formatDate(date: Date | string): string {
+  return new Date(date).toLocaleDateString('de-DE');
+}
+
+export function DocumentList({
+  documents,
+  searchQuery,
+  selectedId,
+  onSelect,
+  onRename,
+  onDelete,
+  onToggleRead,
+  onToggleFavorite,
+}: DocumentListProps) {
   const [renameDocId, setRenameDocId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [activeFilters, setActiveFilters] = useState<Set<DocFilter>>(new Set());
 
-  const filtered = documents.filter((d) =>
-    d.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  function toggleFilter(filter: DocFilter) {
+    setActiveFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(filter)) next.delete(filter);
+      else next.add(filter);
+      return next;
+    });
+  }
+
+  function matchesFilters(doc: Document): boolean {
+    if (activeFilters.size === 0) return true;
+    return (
+      (activeFilters.has('favorite') && !!doc.favorite) ||
+      (activeFilters.has('unread') && !doc.read) ||
+      (activeFilters.has('completed') && !!doc.read)
+    );
+  }
+
+  const filtered = documents
+    .filter((d) => d.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter(matchesFilters)
+    .sort((a, b) => sortTier(a) - sortTier(b));
 
   function openRename(doc: Document, e: { stopPropagation: () => void }) {
     e.stopPropagation();
@@ -56,14 +106,42 @@ export function DocumentList({ documents, searchQuery, selectedId, onSelect, onR
   return (
     <div className="document-list-panel">
       <div className="document-list-header">
-        <Text style={{ fontWeight: '600', fontSize: '13px' }}>Highlights</Text>
+        <Text style={{ fontWeight: '600', fontSize: '13px' }}>Dokumente</Text>
+        <div className="document-list-filters">
+          <ToggleButton
+            icon="favorite"
+            design="Transparent"
+            className="filter-toggle-btn"
+            pressed={activeFilters.has('favorite')}
+            tooltip="Nur Favoriten"
+            onClick={() => toggleFilter('favorite')}
+          />
+          <ToggleButton
+            icon="circle-task"
+            design="Transparent"
+            className="filter-toggle-btn"
+            pressed={activeFilters.has('unread')}
+            tooltip="Nur nicht abgeschlossene"
+            onClick={() => toggleFilter('unread')}
+          />
+          <ToggleButton
+            icon="complete"
+            design="Transparent"
+            className="filter-toggle-btn"
+            pressed={activeFilters.has('completed')}
+            tooltip="Nur abgeschlossene"
+            onClick={() => toggleFilter('completed')}
+          />
+        </div>
       </div>
 
       {filtered.length === 0 ? (
         <div className="empty-state">
           <Icon name="document-text" style={{ fontSize: '48px', color: 'var(--sapNeutralColor)' }} />
           <Text style={{ marginTop: '16px', color: 'var(--sapNeutralColor)', textAlign: 'center' }}>
-            {searchQuery ? 'Keine Dokumente gefunden.' : 'Noch keine Dokumente.\nDatei hochladen oder URL laden.'}
+            {documents.length === 0
+              ? 'Noch keine Dokumente.\nDatei hochladen oder URL laden.'
+              : 'Keine Dokumente gefunden.'}
           </Text>
         </div>
       ) : (
@@ -72,28 +150,49 @@ export function DocumentList({ documents, searchQuery, selectedId, onSelect, onR
             <ListItemStandard
               key={doc.id}
               icon={getDocIcon(doc.type)}
-              description={new Date(doc.updatedAt).toLocaleDateString('de-DE')}
               selected={doc.id === selectedId}
               onClick={() => onSelect(doc)}
-              additionalText={doc.type.toUpperCase()}
             >
               <div className="doc-list-item-content">
-                <span className="doc-title">{doc.title}</span>
-                <div className="doc-item-actions">
+                <div className="doc-title-row">
                   <Button
-                    icon="edit"
+                    icon={doc.favorite ? 'favorite' : 'unfavorite'}
                     design="Transparent"
-                    className="item-action-btn"
-                    tooltip="Umbenennen"
-                    onClick={(e) => openRename(doc, e)}
+                    className={`item-action-btn favorite-btn${doc.favorite ? ' is-favorite' : ''}`}
+                    tooltip={doc.favorite ? 'Favorit entfernen' : 'Als Favorit markieren'}
+                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(doc.id); }}
                   />
+                  <span className={`doc-title${doc.read ? ' doc-title-read' : ''}`}>{doc.title}</span>
                   <Button
-                    icon="delete"
+                    icon={doc.read ? 'complete' : 'circle-task'}
                     design="Transparent"
-                    className="item-action-btn"
-                    tooltip="Löschen"
-                    onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
+                    className={`item-action-btn read-btn${doc.read ? ' is-read' : ''}`}
+                    tooltip={doc.read ? 'Als ungelesen markieren' : 'Als gelesen markieren'}
+                    onClick={(e) => { e.stopPropagation(); onToggleRead(doc.id); }}
                   />
+                  <div className="doc-item-actions">
+                    <Button
+                      icon="edit"
+                      design="Transparent"
+                      className="item-action-btn"
+                      tooltip="Umbenennen"
+                      onClick={(e) => openRename(doc, e)}
+                    />
+                    <Button
+                      icon="delete"
+                      design="Transparent"
+                      className="item-action-btn"
+                      tooltip="Löschen"
+                      onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
+                    />
+                  </div>
+                </div>
+                <div className="doc-meta-row">
+                  <span className="doc-date">Erstellt {formatDate(doc.createdAt)}</span>
+                  {doc.read && doc.completedAt && (
+                    <span className="doc-date doc-date-completed">Abgeschlossen {formatDate(doc.completedAt)}</span>
+                  )}
+                  <span className="doc-type-badge">{doc.type.toUpperCase()}</span>
                 </div>
               </div>
             </ListItemStandard>

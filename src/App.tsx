@@ -1,8 +1,18 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { ThemeProvider, BusyIndicator, Button, Text, FlexBox, Icon, Dialog } from '@ui5/webcomponents-react';
+import {
+  ThemeProvider,
+  BusyIndicator,
+  Button,
+  Text,
+  FlexBox,
+  Icon,
+  Dialog,
+  SegmentedButton,
+  SegmentedButtonItem,
+} from '@ui5/webcomponents-react';
 import '@ui5/webcomponents-icons/dist/AllIcons.js';
-import type { Document, HighlightColor } from './types';
+import type { Document, FontSize, HighlightColor } from './types';
 import { useDocuments } from './hooks/useDocuments';
 import { useHighlights } from './hooks/useHighlights';
 import { useFolders } from './hooks/useFolders';
@@ -25,6 +35,7 @@ import './App.css';
 const VAULT_SUPPORTED = isFileSystemAccessSupported() && Capacitor.getPlatform() !== 'android';
 
 const HIGHLIGHT_COLORS: HighlightColor[] = ['yellow', 'green', 'blue', 'pink', 'orange'];
+const FONT_SIZES: FontSize[] = ['S', 'M', 'L', 'XL'];
 
 const HIGHLIGHT_COLOR_STYLES: Record<HighlightColor, string> = {
   yellow: '#FFEB3B',
@@ -42,6 +53,9 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(
     () => localStorage.getItem('readlighting-sidebar-open') !== 'false'
   );
+  const [fontSize, setFontSize] = useState<FontSize>(
+    () => (localStorage.getItem('readlighting-font-size') as FontSize | null) ?? 'M'
+  );
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const [commentPanelOpen, setCommentPanelOpen] = useState(true);
   const [notesOpen, setNotesOpen] = useState(false);
@@ -55,6 +69,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('readlighting-sidebar-open', String(sidebarOpen));
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    localStorage.setItem('readlighting-font-size', fontSize);
+  }, [fontSize]);
 
   const addDocumentRef = useRef(addDocument);
   addDocumentRef.current = addDocument;
@@ -118,6 +136,29 @@ export default function App() {
       if (selectedDoc?.id === id) setSelectedDoc((prev) => prev ? { ...prev, title: newTitle } : null);
     },
     [updateDocument, selectedDoc]
+  );
+
+  const handleToggleRead = useCallback(
+    (id: string) => {
+      const doc = documents.find((d) => d.id === id);
+      if (!doc) return;
+      const read = !doc.read;
+      const completedAt = read ? new Date() : undefined;
+      updateDocument(id, { read, completedAt });
+      if (selectedDoc?.id === id) setSelectedDoc((prev) => prev ? { ...prev, read, completedAt } : null);
+    },
+    [documents, updateDocument, selectedDoc]
+  );
+
+  const handleToggleFavorite = useCallback(
+    (id: string) => {
+      const doc = documents.find((d) => d.id === id);
+      if (!doc) return;
+      const favorite = !doc.favorite;
+      updateDocument(id, { favorite });
+      if (selectedDoc?.id === id) setSelectedDoc((prev) => prev ? { ...prev, favorite } : null);
+    },
+    [documents, updateDocument, selectedDoc]
   );
 
   const handleFsFileSelect = useCallback(
@@ -264,6 +305,8 @@ export default function App() {
                 onSelect={handleSelectDoc}
                 onRename={handleRenameDoc}
                 onDelete={handleDeleteDoc}
+                onToggleRead={handleToggleRead}
+                onToggleFavorite={handleToggleFavorite}
               />
             </aside>
           )}
@@ -284,6 +327,17 @@ export default function App() {
                         />
                       ))}
                     </FlexBox>
+                    <SegmentedButton itemsFitContent title="Schriftgröße">
+                      {FONT_SIZES.map((size) => (
+                        <SegmentedButtonItem
+                          key={size}
+                          selected={fontSize === size}
+                          onClick={() => setFontSize(size)}
+                        >
+                          {size}
+                        </SegmentedButtonItem>
+                      ))}
+                    </SegmentedButton>
                     <Button
                       icon="search"
                       design="Default"
@@ -319,6 +373,7 @@ export default function App() {
                       document={selectedDoc}
                       highlights={highlights}
                       activeHighlightId={activeHighlightId}
+                      fontSize={fontSize}
                       onHighlight={handleHighlight}
                       onHighlightClick={handleHighlightClick}
                       onSearchOpen={handleSearchOpen}
