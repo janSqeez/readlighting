@@ -133,6 +133,7 @@ export function AppShell({
         />
       )}
       <div className="app-content">{children}</div>
+      <div className="app-version-badge" title="Readlighting Version">v{__APP_VERSION__}</div>
     </div>
   );
 }

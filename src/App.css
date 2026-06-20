@@ -12,6 +12,22 @@
   flex-direction: column;
 }
 
+/* Always-visible build version, independent of screen width and of
+   whichever platform (PWA/Electron/Android) is running - lets you tell
+   apart installs that were updated at different times. */
+.app-version-badge {
+  position: fixed;
+  bottom: 4px;
+  right: 8px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--sapNeutralTextColor, #889);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+  user-select: none;
+}
+
 .main-layout {
   display: flex;
   flex: 1;

@@ -1,13 +1,14 @@
 {
   "name": "readlighting",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "version:sync": "node scripts/sync-version.cjs"
   },
   "dependencies": {
     "@capacitor-community/electron": "^5.0.1",
