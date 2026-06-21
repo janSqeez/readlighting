@@ -15,6 +15,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       strategies: 'generateSW',
+      // Registrierung NICHT automatisch ins HTML injizieren — wir registrieren den
+      // Service-Worker in main.tsx gezielt nur im echten Web. In der Capacitor-WebView
+      // (Android/Electron) würde ein gecachter SW sonst das alte Bundle ausliefern und
+      // erzwang früher ein Neu-Installieren (= Datenverlust).
+      injectRegister: false,
       manifest: {
         name: 'Readlighting',
         short_name: 'Readlighting',

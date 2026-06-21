@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Lokale Geräte-Datensicherungen (enthalten persönliche Inhalte)
+backups/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

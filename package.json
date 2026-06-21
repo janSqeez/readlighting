@@ -1,7 +1,7 @@
 {
   "name": "readlighting",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
     "@capacitor/android": "^8.4.0",
     "@capacitor/core": "^8.4.0",
     "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/share": "^8.0.1",
     "@mindlib-capacitor/send-intent": "^8.0.6",
     "@ui5/webcomponents": "^2.23.1",
     "@ui5/webcomponents-fiori": "^2.23.1",

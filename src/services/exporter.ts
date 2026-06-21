@@ -1,4 +1,5 @@
 import type { Document, Highlight } from '../types';
+import { saveOrShareTextFile } from './fileExport';
 
 const COLOR_EMOJI: Record<string, string> = {
   yellow: '🟡',
@@ -8,7 +9,7 @@ const COLOR_EMOJI: Record<string, string> = {
   orange: '🟠',
 };
 
-export function exportAsJSON(doc: Document, highlights: Highlight[]): void {
+export async function exportAsJSON(doc: Document, highlights: Highlight[]): Promise<void> {
   const data = {
     document: {
       title: doc.title,
@@ -28,14 +29,14 @@ export function exportAsJSON(doc: Document, highlights: Highlight[]): void {
     })),
   };
 
-  download(
+  await saveOrShareTextFile(
     JSON.stringify(data, null, 2),
     `${slugify(doc.title)}.json`,
     'application/json'
   );
 }
 
-export function exportAsMarkdown(doc: Document, highlights: Highlight[]): void {
+export async function exportAsMarkdown(doc: Document, highlights: Highlight[]): Promise<void> {
   const lines: string[] = [];
 
   lines.push(`# ${doc.title}`);
@@ -62,21 +63,11 @@ export function exportAsMarkdown(doc: Document, highlights: Highlight[]): void {
     lines.push(doc.notes.trim());
   }
 
-  download(
+  await saveOrShareTextFile(
     lines.join('\n'),
     `${slugify(doc.title)}.md`,
     'text/markdown'
   );
-}
-
-function download(content: string, filename: string, mimeType: string): void {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 function slugify(text: string): string {

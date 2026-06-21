@@ -35,6 +35,10 @@ import './App.css';
 // (the JS property exists, calling it does nothing) — feature detection alone is unreliable there.
 const VAULT_SUPPORTED = isFileSystemAccessSupported() && Capacitor.getPlatform() !== 'android';
 
+// Auf Android landet ein Export nicht im Download, sondern im nativen Teilen-Menü
+// (siehe services/fileExport.ts) — daher zeigen die Buttons dort "Teilen" statt "Export".
+const IS_ANDROID = Capacitor.getPlatform() === 'android';
+
 const HIGHLIGHT_COLORS: HighlightColor[] = ['yellow', 'green', 'blue', 'pink', 'orange'];
 const FONT_SIZES: FontSize[] = ['S', 'M', 'L', 'XL'];
 
@@ -274,7 +278,7 @@ export default function App() {
         documentTitle={selectedDoc?.title}
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((o) => !o)}
-        onBackupExport={() => exportDatabaseBackup()}
+        onBackupExport={() => void exportDatabaseBackup().catch(console.error)}
         onBackupImport={handleBackupImport}
       >
         <div className="main-layout">
@@ -353,11 +357,11 @@ export default function App() {
                       Kommentare ({highlights.length})
                     </Button>
                     <Button
-                      icon="download"
+                      icon={IS_ANDROID ? 'action' : 'download'}
                       design="Default"
                       onClick={() => setExportDialogOpen(true)}
                     >
-                      Export
+                      {IS_ANDROID ? 'Teilen' : 'Export'}
                     </Button>
                   </FlexBox>
                 </div>
@@ -437,7 +441,7 @@ export default function App() {
 
       <Dialog
         open={exportDialogOpen}
-        headerText={`Export: ${selectedDoc?.title ?? ''}`}
+        headerText={`${IS_ANDROID ? 'Teilen' : 'Export'}: ${selectedDoc?.title ?? ''}`}
         onClose={() => setExportDialogOpen(false)}
         footer={
           <FlexBox justifyContent="End" style={{ padding: '8px' }}>
@@ -453,26 +457,26 @@ export default function App() {
           </Text>
           <FlexBox direction="Column" gap="10px">
             <Button
-              icon="download"
+              icon={IS_ANDROID ? 'action' : 'download'}
               design="Emphasized"
               style={{ width: '100%' }}
               onClick={() => {
-                if (selectedDoc) exportAsMarkdown(selectedDoc, highlights);
+                if (selectedDoc) void exportAsMarkdown(selectedDoc, highlights).catch(console.error);
                 setExportDialogOpen(false);
               }}
             >
-              Als Markdown exportieren (.md)
+              {IS_ANDROID ? 'Als Markdown teilen (.md)' : 'Als Markdown exportieren (.md)'}
             </Button>
             <Button
-              icon="download"
+              icon={IS_ANDROID ? 'action' : 'download'}
               design="Default"
               style={{ width: '100%' }}
               onClick={() => {
-                if (selectedDoc) exportAsJSON(selectedDoc, highlights);
+                if (selectedDoc) void exportAsJSON(selectedDoc, highlights).catch(console.error);
                 setExportDialogOpen(false);
               }}
             >
-              Als JSON exportieren (.json)
+              {IS_ANDROID ? 'Als JSON teilen (.json)' : 'Als JSON exportieren (.json)'}
             </Button>
           </FlexBox>
           <Text style={{ color: 'var(--sapNeutralColor)', fontSize: '12px', display: 'block', margin: '12px 0' }}>
@@ -483,11 +487,11 @@ export default function App() {
             design="Emphasized"
             style={{ width: '100%' }}
             onClick={() => {
-              if (selectedDoc) exportDocumentBundle(selectedDoc, highlights);
+              if (selectedDoc) void exportDocumentBundle(selectedDoc, highlights).catch(console.error);
               setExportDialogOpen(false);
             }}
           >
-            Als Readlighting-Datei exportieren (.json)
+            {IS_ANDROID ? 'Als Readlighting-Datei teilen (.json)' : 'Als Readlighting-Datei exportieren (.json)'}
           </Button>
           <Text style={{ color: 'var(--sapNeutralColor)', fontSize: '12px', display: 'block', marginTop: '8px' }}>
             Enthält Inhalt + Markierungen + Notizen – zum Übertragen auf ein anderes Gerät (z. B. Android → Ubuntu) per Import.

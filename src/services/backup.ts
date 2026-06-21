@@ -1,5 +1,6 @@
 import type { Document, Highlight } from '../types';
 import * as db from '../services/db';
+import { saveOrShareTextFile } from './fileExport';
 
 interface BackupData {
   version: 1;
@@ -22,7 +23,11 @@ export async function exportDatabaseBackup(): Promise<void> {
     highlights,
     folderNames: folders.map((f) => f.name),
   };
-  download(JSON.stringify(data, null, 2), `readlighting-backup-${dateStamp()}.json`);
+  await saveOrShareTextFile(
+    JSON.stringify(data, null, 2),
+    `readlighting-backup-${dateStamp()}.json`,
+    'application/json',
+  );
 }
 
 export async function importDatabaseBackup(file: File): Promise<{ documents: number; highlights: number }> {
@@ -38,16 +43,6 @@ export async function importDatabaseBackup(file: File): Promise<{ documents: num
     await db.saveHighlight({ ...h, createdAt: new Date(h.createdAt) });
   }
   return { documents: data.documents.length, highlights: data.highlights.length };
-}
-
-function download(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 function dateStamp(): string {

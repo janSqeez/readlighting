@@ -1,6 +1,7 @@
 import type { Document, Highlight, HighlightColor } from '../types';
 import * as db from './db';
 import { hashContent } from './hash';
+import { saveOrShareTextFile } from './fileExport';
 
 interface BundleHighlight {
   startOffset: number;
@@ -58,13 +59,11 @@ export async function exportDocumentBundle(doc: Document, highlights: Highlight[
     })),
   };
 
-  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${slugify(doc.title)}.readlighting.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  await saveOrShareTextFile(
+    JSON.stringify(bundle, null, 2),
+    `${slugify(doc.title)}.readlighting.json`,
+    'application/json',
+  );
 }
 
 export async function importDocumentBundle(file: File): Promise<{
