@@ -231,6 +231,96 @@ ui5-li:hover .doc-item-actions,
   padding: 0 4px !important;
 }
 
+/* "In Bearbeitung" marker — shown when a doc has highlights or notes. */
+.doc-progress-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--sapBrandColor, #0070f2);
+}
+
+.doc-progress-icon [ui5-icon],
+.doc-progress-icon ui5-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* Papierkorb (Trash) */
+.trash-section {
+  flex-shrink: 0;
+  border-top: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
+  background: var(--sapBaseColor, #fff);
+}
+
+.trash-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sapTextColor, #1d2d3e);
+  text-align: left;
+}
+
+.trash-header:hover {
+  background: var(--sapList_Hover_Background, #f5f6f7);
+}
+
+.trash-chevron {
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.trash-header-label {
+  flex: 1;
+}
+
+.trash-list {
+  max-height: 30vh;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+.trash-empty {
+  padding: 8px 12px 12px;
+  font-size: 12px;
+  color: var(--sapNeutralTextColor, #556b82);
+}
+
+.trash-actions {
+  padding: 0 8px 6px;
+}
+
+.trash-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 12px;
+  font-size: 13px;
+  color: var(--sapTextColor, #1d2d3e);
+}
+
+.trash-row:hover {
+  background: var(--sapList_Hover_Background, #f5f6f7);
+}
+
+.trash-row-icon {
+  flex-shrink: 0;
+  color: var(--sapNeutralTextColor, #556b82);
+}
+
+.trash-row-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Vault Browser */
 .vault-browser {
   border-bottom: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);

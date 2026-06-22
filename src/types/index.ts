@@ -32,6 +32,9 @@ export interface Document {
   read?: boolean;
   completedAt?: Date;
   favorite?: boolean;
+  // Soft-delete: when set, the document lives in the trash (Papierkorb) — kept in
+  // the DB (with its highlights) so it can be restored, hidden from the main list.
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

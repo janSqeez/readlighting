@@ -29,6 +29,7 @@ import { exportDatabaseBackup, importDatabaseBackup } from './services/backup';
 import { exportDocumentBundle, importDocumentBundle } from './services/documentBundle';
 import { readFileText, inferDocumentType, isFileSystemAccessSupported } from './services/filesystem';
 import { hashContent } from './services/hash';
+import { getAllHighlights } from './services/db';
 import './App.css';
 
 // showDirectoryPicker is present-but-nonfunctional in Capacitor's Android WebView
@@ -51,7 +52,18 @@ const HIGHLIGHT_COLOR_STYLES: Record<HighlightColor, string> = {
 };
 
 export default function App() {
-  const { documents, loading, addDocument, updateDocument, removeDocument, findByHash } = useDocuments();
+  const {
+    documents,
+    trashedDocuments,
+    loading,
+    addDocument,
+    updateDocument,
+    trashDocument,
+    restoreDocument,
+    deleteDocumentPermanently,
+    emptyTrash,
+    findByHash,
+  } = useDocuments();
   const { folders, openFolderIds, openNewFolder, reopenFolder, closeFolder, forgetFolder } = useFolders();
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [search, setSearch] = useState('');
@@ -69,6 +81,34 @@ export default function App() {
   const { highlights, addHighlight, updateHighlight, removeHighlight } = useHighlights(
     selectedDoc?.id ?? null
   );
+
+  // Set of document IDs that have at least one highlight — drives the "in
+  // progress" marker in the list. Notes-presence is read directly off the doc.
+  const [highlightedDocIds, setHighlightedDocIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    getAllHighlights().then((hs) => setHighlightedDocIds(new Set(hs.map((h) => h.documentId))));
+  }, []);
+
+  // Keep the marker live for the open document as highlights are added/removed.
+  useEffect(() => {
+    if (!selectedDoc) return;
+    const id = selectedDoc.id;
+    setHighlightedDocIds((prev) => {
+      const has = prev.has(id);
+      if (highlights.length > 0 && !has) {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      }
+      if (highlights.length === 0 && has) {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      }
+      return prev;
+    });
+  }, [highlights, selectedDoc]);
 
   useEffect(() => {
     localStorage.setItem('readlighting-sidebar-open', String(sidebarOpen));
@@ -115,9 +155,13 @@ export default function App() {
       const hash = await hashContent(doc.content);
       const existing = findByHash(hash);
       if (existing) {
-        if (existing.content !== doc.content) {
-          await updateDocument(existing.id, { content: doc.content });
-          return { ...existing, content: doc.content };
+        const updates: Partial<Document> = {};
+        if (existing.content !== doc.content) updates.content = doc.content;
+        // Re-adding a file that's currently in the trash brings it back.
+        if (existing.deletedAt) updates.deletedAt = undefined;
+        if (Object.keys(updates).length > 0) {
+          await updateDocument(existing.id, updates);
+          return { ...existing, ...updates };
         }
         return existing;
       }
@@ -128,13 +172,45 @@ export default function App() {
 
   useShareIntent(handleAddDoc, handleSelectDoc);
 
-  const handleDeleteDoc = useCallback(
+  // Move to trash (the destructive-confirm prompt lives in DocumentList).
+  const handleTrashDoc = useCallback(
     (id: string) => {
-      removeDocument(id);
+      trashDocument(id);
       if (selectedDoc?.id === id) setSelectedDoc(null);
     },
-    [removeDocument, selectedDoc]
+    [trashDocument, selectedDoc]
   );
+
+  const handleRestoreDoc = useCallback(
+    (id: string) => {
+      restoreDocument(id);
+    },
+    [restoreDocument]
+  );
+
+  const handlePermanentDelete = useCallback(
+    (id: string) => {
+      deleteDocumentPermanently(id);
+      setHighlightedDocIds((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      if (selectedDoc?.id === id) setSelectedDoc(null);
+    },
+    [deleteDocumentPermanently, selectedDoc]
+  );
+
+  const handleEmptyTrash = useCallback(() => {
+    const trashedIds = new Set(trashedDocuments.map((d) => d.id));
+    emptyTrash();
+    setHighlightedDocIds((prev) => {
+      const next = new Set([...prev].filter((id) => !trashedIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+    if (selectedDoc && trashedIds.has(selectedDoc.id)) setSelectedDoc(null);
+  }, [emptyTrash, trashedDocuments, selectedDoc]);
 
   const handleRenameDoc = useCallback(
     (id: string, newTitle: string) => {
@@ -178,10 +254,17 @@ export default function App() {
           existing.fs?.folderId !== fs.folderId ||
           existing.fs?.relativePath !== fs.relativePath ||
           existing.fs?.fileName !== fs.fileName;
-        if (existing.content !== content || fsChanged || existing.source !== 'filesystem') {
-          await updateDocument(existing.id, { content, fs, source: 'filesystem' });
+        // Opening a file that's in the trash restores it.
+        const wasTrashed = !!existing.deletedAt;
+        if (existing.content !== content || fsChanged || existing.source !== 'filesystem' || wasTrashed) {
+          await updateDocument(existing.id, {
+            content,
+            fs,
+            source: 'filesystem',
+            ...(wasTrashed ? { deletedAt: undefined } : {}),
+          });
         }
-        setSelectedDoc({ ...existing, content, fs, source: 'filesystem' });
+        setSelectedDoc({ ...existing, content, fs, source: 'filesystem', deletedAt: undefined });
         setActiveHighlightId(null);
         return;
       }
@@ -306,11 +389,16 @@ export default function App() {
               )}
               <DocumentList
                 documents={documents}
+                trashedDocuments={trashedDocuments}
+                highlightedDocIds={highlightedDocIds}
                 searchQuery={search}
                 selectedId={selectedDoc?.id ?? null}
                 onSelect={handleSelectDoc}
                 onRename={handleRenameDoc}
-                onDelete={handleDeleteDoc}
+                onDelete={handleTrashDoc}
+                onRestore={handleRestoreDoc}
+                onPermanentDelete={handlePermanentDelete}
+                onEmptyTrash={handleEmptyTrash}
                 onToggleRead={handleToggleRead}
                 onToggleFavorite={handleToggleFavorite}
               />
