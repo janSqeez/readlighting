@@ -27,6 +27,10 @@ const FONT_SIZE_PX: Record<FontSize, string> = {
   XL: '22px',
 };
 
+// Words per "book page" for the page-count estimate — a typical paperback page
+// holds ~250 words. Used only for the rough reading-length stat in the footer.
+const WORDS_PER_PAGE = 250;
+
 interface DocumentViewerProps {
   document: Document;
   highlights: Highlight[];
@@ -56,6 +60,29 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
   const [searchMatches, setSearchMatches] = useState<SearchMatch[]>([]);
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
   const [searchVisible, setSearchVisible] = useState(false);
+  // Fraction (0..1) of the document scrolled through — drives the reading-progress footer.
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Plain text of the document, used both for word count and in-document search.
+  const plainText = useMemo(() => {
+    if (document.type === 'text') return document.content;
+    const html =
+      document.type === 'markdown'
+        ? (marked.parse(document.content, { async: false }) as string)
+        : document.content;
+    const el = window.document.createElement('div');
+    el.innerHTML = html;
+    return el.textContent ?? '';
+  }, [document.content, document.type]);
+
+  const wordCount = useMemo(
+    () => plainText.trim().split(/\s+/).filter(Boolean).length,
+    [plainText],
+  );
+  const pageCount = Math.max(1, Math.ceil(wordCount / WORDS_PER_PAGE));
+  const progressPercent = Math.round(scrollProgress * 100);
+  // Pages "read" so far = how far the scroll has progressed through the page total.
+  const pagesRead = Math.min(pageCount, Math.floor(scrollProgress * pageCount));
 
   const openSearch = useCallback(() => {
     setSearchVisible(true);
@@ -87,7 +114,35 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
     setSearchMatches([]);
     setActiveMatchIndex(0);
     setSearchVisible(false);
+    setScrollProgress(0);
+    if (contentRef.current) contentRef.current.scrollTop = 0;
   }, [document.id]);
+
+  // Track reading progress as the user scrolls through .document-content (the
+  // element that actually scrolls). Recomputed when the rendered content changes
+  // so the scrollable height reflects the new document.
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const maxScroll = el.scrollHeight - el.clientHeight;
+      setScrollProgress(maxScroll > 0 ? Math.min(1, el.scrollTop / maxScroll) : 1);
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(update);
+    };
+
+    update();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [document.id, document.content, fontSize]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -95,17 +150,6 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
       setActiveMatchIndex(0);
       return;
     }
-
-    const plainText = (() => {
-      if (document.type === 'text') return document.content;
-      const html =
-        document.type === 'markdown'
-          ? (marked.parse(document.content, { async: false }) as string)
-          : document.content;
-      const el = window.document.createElement('div');
-      el.innerHTML = html;
-      return el.textContent ?? '';
-    })();
 
     const query = searchQuery.toLowerCase();
     const matches: SearchMatch[] = [];
@@ -118,7 +162,7 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
     }
     setSearchMatches(matches);
     setActiveMatchIndex(0);
-  }, [searchQuery, document.content, document.type]);
+  }, [searchQuery, plainText]);
 
   useEffect(() => {
     if (!contentRef.current) return;
@@ -217,6 +261,27 @@ export const DocumentViewer = forwardRef<DocumentViewerHandle, DocumentViewerPro
           style={{ fontSize: FONT_SIZE_PX[fontSize] }}
           dangerouslySetInnerHTML={{ __html: renderedContent ?? '' }}
         />
+      </div>
+
+      <div className="document-stats-bar">
+        <Text className="document-stats-length">
+          {wordCount.toLocaleString('de-DE')} Wörter · ~{pageCount} {pageCount === 1 ? 'Seite' : 'Seiten'}
+        </Text>
+        <div className="document-stats-progress">
+          <div
+            className="document-stats-progress-track"
+            role="progressbar"
+            aria-valuenow={progressPercent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Lesefortschritt"
+          >
+            <div className="document-stats-progress-fill" style={{ width: `${progressPercent}%` }} />
+          </div>
+          <Text className="document-stats-progress-label">
+            {progressPercent}% · {pagesRead}/{pageCount} Seiten
+          </Text>
+        </div>
       </div>
     </div>
   );
