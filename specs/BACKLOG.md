@@ -3,7 +3,7 @@
 Ranked by risk × change frequency (6-month git churn). No tests exist yet, so step 0 is the prerequisite for everything.
 
 0. ~~Test runner~~ done: Vitest + happy-dom + fake-indexeddb (`npm test`, setup in `src/test/setup.ts`).
-1. **Lint baseline**: ignore `android/`, `electron/`, build output in `eslint.config.js`; fix the 8 react-hooks errors in `src/`. → small `/sdd-spec`.
+1. ~~Lint baseline~~ done (config + react-hooks errors).
 2. ~~`highlighter`~~ → specs/001 (Draft), `content-hash` → 002, `persistence` (db.ts) → 003
 3. ~~export/import~~ → 004 document bundle, 005 plain exports, 006 database backup (Draft)
 4. ~~`crawler`~~ → 007 url-import (Draft; sanitising question is security-relevant)

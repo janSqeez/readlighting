@@ -178,6 +178,7 @@ function FolderSearchResults({
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading flag for the debounced search
     setLoading(true);
     const timer = setTimeout(() => {
       searchFiles(folder.handle, query).then((found) => {
@@ -248,6 +249,7 @@ function DirectoryNode({
   }, [dirHandle]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lazy-load directory entries on first expand
     if (expanded && entries === null) load();
   }, [expanded, entries, load]);
 

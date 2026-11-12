@@ -1,13 +1,9 @@
 # Baseline (2026-11-12)
 
-Pre-existing failures before SDD adoption. Not regressions; not fixed during adoption.
+Status before SDD adoption: `tsc -b` green, tests none, `npm run lint` red (22 errors, 5 warnings).
 
-| Command | Result |
-|---------|--------|
-| `npx tsc -b` | green |
-| `npm run lint` | **red**: 27 problems (22 errors, 5 warnings) |
-| `npm test` | green (smoke test only, Vitest added 2026-11-12) |
+**Resolved the same day:** `android/`, `electron/` and `backups/` are ignored by ESLint (platform shells, generated output);
+the 8 react-hooks errors in `src/` were fixed (latest-callback refs moved into effects, intentional
+setState-in-effect patterns annotated with `eslint-disable-next-line … -- reason`).
 
-## Lint breakdown
-- Application code (`src/`, 8 errors): `react-hooks/set-state-in-effect` (App.tsx, VaultBrowser.tsx ×2, useHighlights.ts), `react-hooks/refs` (App.tsx ×2, useShareIntent.ts ×2).
-- Noise from generated/vendored code (14 errors, 5 warnings): `android/app/build/...`, `electron/build/...`, `electron/src/...`, `electron/live-runner.js`, `electron/resources/...` (`no-var-requires`, `no-explicit-any`, `no-unused-vars`). Cause: `eslint.config.js` only ignores `dist`.
+Current state: `npm test` (52 tests), `npm run type-check`, `npm run lint` and `npm run build` are all green. Nothing is red.

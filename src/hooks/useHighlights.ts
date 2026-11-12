@@ -7,6 +7,7 @@ export function useHighlights(documentId: string | null) {
 
   useEffect(() => {
     if (!documentId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset when no document is open
       setHighlights([]);
       return;
     }

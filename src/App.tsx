@@ -94,6 +94,7 @@ export default function App() {
   useEffect(() => {
     if (!selectedDoc) return;
     const id = selectedDoc.id;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- derived marker set kept in sync with the open document's highlights
     setHighlightedDocIds((prev) => {
       const has = prev.has(id);
       if (highlights.length > 0 && !has) {
@@ -119,9 +120,11 @@ export default function App() {
   }, [fontSize]);
 
   const addDocumentRef = useRef(addDocument);
-  addDocumentRef.current = addDocument;
   const setSelectedDocRef = useRef(setSelectedDoc);
-  setSelectedDocRef.current = setSelectedDoc;
+  useEffect(() => {
+    addDocumentRef.current = addDocument;
+    setSelectedDocRef.current = setSelectedDoc;
+  }, [addDocument, setSelectedDoc]);
 
   useEffect(() => {
     const hash = window.location.hash;
