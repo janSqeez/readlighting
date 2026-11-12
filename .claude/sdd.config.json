@@ -1,0 +1,8 @@
+{
+  "_comment": "{AC} is replaced by 'AC-NNN-' of the spec being implemented. /sdd-adopt filled this in (Vitest).",
+  "specTestCmd": "npx vitest run -t \"{AC}\"",
+  "verifyCmds": ["npm test", "npm run type-check", "npm run lint"],
+  "testDirs": ["src"],
+  "testFilePattern": "\\.(test|spec)\\.[cm]?[jt]sx?$",
+  "maxIterations": 5
+}
