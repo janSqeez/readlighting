@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "version:sync": "node scripts/sync-version.cjs"
+    "version:sync": "node scripts/sync-version.cjs",
+    "test": "vitest run",
+    "type-check": "tsc -b"
   },
   "dependencies": {
     "@capacitor-community/electron": "^5.0.1",
@@ -40,9 +42,12 @@
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "fake-indexeddb": "^6.2.8",
     "globals": "^17.6.0",
+    "happy-dom": "^21.0.4",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12"
+    "vite": "^8.0.12",
+    "vitest": "^5.1.0"
   }
 }
