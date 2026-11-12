@@ -45,9 +45,11 @@ async function addDocFromIntent(intent: Intent, onAdd: AddDocFn): Promise<Docume
 // storage and hands back a file:// path, which @capacitor/filesystem reads directly.
 export function useShareIntent(onAdd: AddDocFn, onSelect: (doc: Document) => void) {
   const onAddRef = useRef(onAdd);
-  onAddRef.current = onAdd;
   const onSelectRef = useRef(onSelect);
-  onSelectRef.current = onSelect;
+  useEffect(() => {
+    onAddRef.current = onAdd;
+    onSelectRef.current = onSelect;
+  });
 
   useEffect(() => {
     if (Capacitor.getPlatform() !== 'android') return;
